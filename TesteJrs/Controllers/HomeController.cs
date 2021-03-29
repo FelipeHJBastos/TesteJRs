@@ -21,53 +21,78 @@ namespace TesteJrs.Controllers
         };
 
         IFirebaseClient client;
-        public ActionResult Index()
+        public async Task<ActionResult> Index()
         {
             client = new FireSharp.FirebaseClient(config);
-            return View();
-        }
-
-        public ActionResult About()
-        {
-            ViewBag.Message = "Your application description page.";
-
-            return View();
-        }
-
-        public ActionResult Contact()
-        {
-            ViewBag.Message = "Your contact page.";
-
-            return View();
+            FirebaseResponse response = await client.GetTaskAsync("Information/");
+            var data = JsonConvert.DeserializeObject<List<TarefaModel>>(response.Body);
+            var lista = new List<TarefaModel>();
+            if(data != null)
+            {
+                foreach(var item in data)
+                {
+                    if(item != null)
+                    {
+                        lista.Add(item);
+                    }
+                }
+            }
+            return View(lista);
         }
 
         [HttpPost]
-        public async Task<TarefaModel> IncluirTarefa(int id, string descricaoTarefa, DateTime dataInclusao, DateTime? dataConclusao)
+        public async Task<TarefaModel> IncluirTarefa(int id, string descricaoTarefa, DateTime dataInicio, DateTime dataFinal)
         {
             client = new FireSharp.FirebaseClient(config);
+
             var tarefa = new TarefaModel
             {
                 Id = id,
                 Descricao = descricaoTarefa,
-                DataInclusao = dataInclusao,
-                DataConclusao = dataConclusao
+                DataInicio = dataInicio.ToLocalTime(),
+                DataFinal = dataFinal.ToLocalTime()
             };
 
             SetResponse response = await client.SetTaskAsync("Information/" + tarefa.Id.ToString(), tarefa);
             TarefaModel result = response.ResultAs<TarefaModel>();
 
             return result;
-            //Console.WriteLine("Tarefa Inserida " + result.Id);
+        }
+
+        [HttpPost]
+        public async Task<TarefaModel> DeletarTarefa(int id)
+        {
+            client = new FireSharp.FirebaseClient(config);
+            DeleteResponse response = await client.DeleteTaskAsync("Information/" + id.ToString());
+            TarefaModel result = new TarefaModel();
+            if(response.Body != "null")
+            {
+                result = response.ResultAs<TarefaModel>();
+            }
+
+            return result;
         }
 
         [HttpGet]
-        public async Task<TarefaModel> RetornaUltimoId()
+        public async Task<int> RetornaUltimoId()
         {
             client = new FireSharp.FirebaseClient(config);
+            
             FirebaseResponse response = await client.GetTaskAsync("Information/");
-            var jsonResponse = JsonConvert.DeserializeObject<TarefaModel>(response.Body);
-           // TarefaModel result = response.ResultAs<TarefaModel>();
-            return null;
+            var retorno = JsonConvert.DeserializeObject<List<TarefaModel>>(response.Body);
+            var ultimoId = 0;
+            if(retorno != null)
+            {
+                foreach (var item in retorno)
+                {
+                    if(item.Id > ultimoId)
+                    {
+                        ultimoId = item.Id;
+                    }
+                }
+                ultimoId ++;
+            }
+            return ultimoId;
         }
     }
 }

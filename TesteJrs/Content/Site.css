@@ -22,3 +22,12 @@ select,
 textarea {
     max-width: 280px;
 }
+
+td {
+    cursor: pointer;
+}
+
+.selected {
+    background-color: gray;
+    color: #FFF;
+}

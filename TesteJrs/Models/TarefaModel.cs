@@ -9,7 +9,7 @@ namespace TesteJrs.Models
     {
         public int Id { get; set; }
         public string Descricao { get; set; }
-        public DateTime DataInclusao { get; set; }
-        public DateTime? DataConclusao { get; set; }
+        public DateTime DataInicio{ get; set; }
+        public DateTime DataFinal { get; set; }
     }
 }
